@@ -1,6 +1,6 @@
 # TODO(luc) Add 'doc' to this list when ready
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = po ccstruct ccutil classify cutil dict image textord viewer wordrec ccmain training tessdata testing java api
+SUBDIRS = po ccstruct ccutil classify cube cutil dict image neural_networks/runtime textord viewer wordrec ccmain training tessdata testing java api
 AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\"
 
 EXTRA_DIST = config/config.rpath  eurotext.tif phototest.tif ReleaseNotes \

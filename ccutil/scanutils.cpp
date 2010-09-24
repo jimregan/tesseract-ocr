@@ -47,7 +47,6 @@ enum Ranks {
   RANK_LONG = 1,
   RANK_LONGLONG = 2,
   RANK_PTR      = INT_MAX // Special value used for pointers
-  RANK_PTR      = 3 // Special value used for pointers
 };
 
 const enum Ranks kMinRank = RANK_CHAR;
@@ -233,7 +232,7 @@ int vfscanf(FILE* stream, const char *format, va_list ap)
   int q = 0;
   uintmax_t val = 0;
   int rank = RANK_INT;    // Default rank
-  unsigned int width = ~0;
+  unsigned int width = UINT_MAX;
   int base;
   int flags = 0;
   enum {
@@ -262,7 +261,7 @@ int vfscanf(FILE* stream, const char *format, va_list ap)
       case ST_NORMAL:
         if (ch == '%') {
           state = ST_FLAGS;
-          flags = 0; rank = RANK_INT; width = ~0;
+          flags = 0; rank = RANK_INT; width = UINT_MAX;
         } else if (isspace(static_cast<unsigned char>(ch))) {
           SkipSpace(stream);
         } else {
@@ -414,6 +413,7 @@ int vfscanf(FILE* stream, const char *format, va_list ap)
                 break;
               }
 
+              {
               double fval = streamtofloat(stream);
               switch(rank) {
                 case RANK_INT:
@@ -424,6 +424,7 @@ int vfscanf(FILE* stream, const char *format, va_list ap)
                 break;
               }
               converted++;
+              }
             break;
 
             case 'c':               // Character
