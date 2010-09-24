@@ -25,10 +25,14 @@
 /*----------------------------------------------------------------------
               I n c l u d e s
 ----------------------------------------------------------------------*/
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "plotseg.h"
 #include "callcpp.h"
 #include "scrollview.h"
-#include "tessclas.h"
 #include "blobs.h"
 #include "const.h"
 #include <math.h>
@@ -85,7 +89,7 @@ void render_segmentation(ScrollView *window,
   // Find bounding box.
   blobs_bounding_box(chunks, &topleft, &botright);
 
-  iterate_blobs(blob, chunks) {
+  for (blob = chunks; blob != NULL; blob = blob->next) {
 
     if (chunks_left-- == 0) {
       color = color_list[++char_num % NUM_COLORS];

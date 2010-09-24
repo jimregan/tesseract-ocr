@@ -17,13 +17,17 @@
  *
  **********************************************************************/
 
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "mfcpch.h"
 #ifdef __UNIX__
 #include          <assert.h>
 #endif
 #include          "stderr.h"
 #include          "blobbox.h"
-#include          "lmedsq.h"
 #include          "statistc.h"
 #include          "drawtord.h"
 #include          "tovars.h"

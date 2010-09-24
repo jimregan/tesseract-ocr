@@ -18,8 +18,10 @@
  **********************************************************************/
 
 #include "mfcpch.h"
+#if (defined _MSC_VER && defined USE_VLD)
+#include <vld.h>
+#endif
 #include <ctype.h>
-#include "applybox.h"
 #include "control.h"
 #include "tessvars.h"
 #include "tessedit.h"
@@ -27,50 +29,37 @@
 #include "thresholder.h"
 #include "pageres.h"
 #include "imgs.h"
-#include "varabled.h"
+#include "params.h"
+#include "paramsd.h"
 #include "tprintf.h"
 #include "tesseractmain.h"
 #include "stderr.h"
 #include "notdll.h"
-#include "mainblk.h"
 #include "output.h"
 #include "globals.h"
-#include "helpers.h"
 #include "blread.h"
 #include "tfacep.h"
-#include "callnet.h"
 
 // Include automatically generated configuration file if running autoconf
 #ifdef HAVE_CONFIG_H
 #include "config_auto.h"
 #endif
-#ifdef HAVE_LIBTIFF
-#include "tiffio.h"
-#endif
-#ifdef HAVE_LIBLEPT
-#include "allheaders.h"
+#ifdef USE_NLS
+#include <libintl.h>
+#include <locale.h>
+#define _(x) gettext(x)
 #else
-class Pix;
+#define _(x) (x)
 #endif
+#ifndef HAVE_LIBLEPT
+#error "Sorry: Tesseract no longer compiles or runs without Leptonica!";
+#endif
+#include "allheaders.h"
 
-#ifdef _TIFFIO_
-void read_tiff_image(TIFF* tif, IMAGE* image);
-#endif
 
 #define VARDIR        "configs/" /*variables files */
                                  //config under api
 #define API_CONFIG      "configs/api_config"
-#define EXTERN
-
-BOOL_VAR(tessedit_create_boxfile, FALSE, "Output text with boxes");
-BOOL_VAR(tessedit_create_hocr, FALSE, "Output HTML with hOCR markup");
-BOOL_VAR(tessedit_read_image, TRUE, "Ensure the image is read");
-INT_VAR(tessedit_serial_unlv, 0,
-        "0->Whole page, 1->serial no adapt, 2->serial with adapt");
-INT_VAR(tessedit_page_number, -1,
-        "-1 -> All pages, else specifc page to process");
-BOOL_VAR(tessedit_write_images, FALSE, "Capture the image from the IPE");
-BOOL_VAR(tessedit_debug_to_screen, FALSE, "Dont use debug file");
 
 const int kMaxIntSize = 22;
 char szAppName[] = "Tessedit";   //app name
@@ -101,32 +90,29 @@ char szAppName[] = "Tessedit";   //app name
 // the value of input_file is ignored - ugly, but true - a consequence of
 // the way that unlv zone file reading takes the place of a page layout
 // analyzer.
-void TesseractImage(const char* input_file, IMAGE* image, Pix* pix, int page_index,
+void TesseractImage(const char* input_file, Pix* pix, int page_index,
                     tesseract::TessBaseAPI* api, STRING* text_out) {
   api->SetInputName(input_file);
-#ifdef HAVE_LIBLEPT
-  if (pix != NULL) {
-    api->SetImage(pix);
-  } else {
-#endif
-    int bytes_per_line = check_legal_image_size(image->get_xsize(),
-                                                image->get_ysize(),
-                                                image->get_bpp());
-    api->SetImage(image->get_buffer(), image->get_xsize(), image->get_ysize(),
-                  image->get_bpp() / 8, bytes_per_line);
-#ifdef HAVE_LIBLEPT
-  }
-#endif
-  if (tessedit_serial_unlv == 0) {
+  api->SetImage(pix);
+  int serial_unlv;
+  ASSERT_HOST(api->GetIntVariable("tessedit_serial_unlv", &serial_unlv));
+  if (serial_unlv == 0) {
     char* text;
-    if (tessedit_create_boxfile)
+    bool bool_value;
+    if ((api->GetBoolVariable("tessedit_create_boxfile", &bool_value) &&
+         bool_value) ||
+        (api->GetBoolVariable("tessedit_make_boxes_from_boxes", &bool_value) &&
+         bool_value)) {
       text = api->GetBoxText(page_index);
-    else if (tessedit_write_unlv)
+    } else if (api->GetBoolVariable("tessedit_write_unlv", &bool_value) &&
+               bool_value) {
       text = api->GetUNLVText();
-    else if (tessedit_create_hocr)
-      text = api->GetHOCRText(page_index + 1);
-    else
+    } else if (api->GetBoolVariable("tessedit_create_hocr", &bool_value)
+               && bool_value) {
+      text = api->GetHOCRText(page_index);
+    } else {
       text = api->GetUTF8Text();
+    }
     *text_out += text;
     delete [] text;
   } else {
@@ -136,9 +122,9 @@ void TesseractImage(const char* input_file, IMAGE* image, Pix* pix, int page_ind
     if (lastdot != NULL) {
       filename[lastdot - filename.string()] = '\0';
     }
-    if (!read_unlv_file(filename, image->get_xsize(), image->get_ysize(),
+    if (!read_unlv_file(filename, pixGetWidth(pix), pixGetHeight(pix),
                         &blocks)) {
-      fprintf(stderr, "Error: Must have a unlv zone file %s to read!\n",
+      fprintf(stderr, _("Error: Must have a unlv zone file %s to read!\n"),
               filename.string());
       return;
     }
@@ -146,17 +132,20 @@ void TesseractImage(const char* input_file, IMAGE* image, Pix* pix, int page_ind
     for (b_it.mark_cycle_pt(); !b_it.cycled_list(); b_it.forward()) {
       BLOCK* block = b_it.data();
       TBOX box = block->bounding_box();
-      api->SetRectangle(box.left(), image->get_ysize() - box.top(),
+      api->SetRectangle(box.left(), pixGetHeight(pix) - box.top(),
                         box.width(), box.height());
       char* text = api->GetUNLVText();
       *text_out += text;
       delete [] text;
-      if (tessedit_serial_unlv == 1)
+      if (serial_unlv == 1)
         api->ClearAdaptiveClassifier();
     }
   }
-  if (tessedit_write_images) {
-    page_image.write("tessinput.tif");
+  bool bool_value;
+  if (api->GetBoolVariable("tessedit_write_images",
+                           &bool_value) && bool_value) {
+    Pix* page_pix = api->GetThresholdedImage();
+    pixWrite("tessinput.tif", page_pix, IFF_TIFF_G4);
   }
 }
 
@@ -168,13 +157,25 @@ void TesseractImage(const char* input_file, IMAGE* image, Pix* pix, int page_ind
 int main(int argc, char **argv) {
   STRING outfile;               //output file
 
+#ifdef USE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (PACKAGE, LOCALEDIR);
+  textdomain (PACKAGE);
+#endif
+
   // Detect incorrectly placed -l option.
   for (int arg = 0; arg < argc; ++arg) {
     if (arg != 3 && strcmp(argv[arg], "-l") == 0) {
-      fprintf(stderr, "Error: -l must be arg3, not %d\n", arg);
+      fprintf(stderr, _("Error: -l must be arg3, not %d\n"), arg);
       argc = 0;
     }
   }
+#ifdef HAVE_CONFIG_H /* Assume that only Unix users care about -v */
+  if (argc == 2 && strcmp(argv[1], "-v") == 0) {
+    fprintf(stderr, "tesseract %s\n", PACKAGE_VERSION);
+    exit(1);
+  }
+#endif
   if (argc < 3) {
     fprintf(stderr, "Usage:%s imagename outputbase [-l lang]"
             " [configfile [[+|-]varfile]...]\n"
@@ -196,140 +197,93 @@ int main(int argc, char **argv) {
   tesseract::TessBaseAPI  api;
 
   api.SetOutputName(argv[2]);
-  api.Init(argv[0], lang, &(argv[arg]), argc-arg, false);
-  api.SetPageSegMode(tesseract::PSM_AUTO);
+  api.Init(argv[0], lang, tesseract::OEM_DEFAULT, &(argv[arg]), argc-arg, false);
 
-  tprintf ("Tesseract Open Source OCR Engine %s\n",
-#if defined(HAVE_LIBLEPT)
-           "with Leptonica");
-#elif defined(_TIFFIO_)
-           "with LibTiff");
-#else
-           "");
-#endif
+  tprintf (_("Tesseract Open Source OCR Engine with Leptonica\n"));
 
-  IMAGE image;
   STRING text_out;
+  int tessedit_page_number;
+  ASSERT_HOST(api.GetIntVariable("tessedit_page_number",
+                                 &tessedit_page_number));
   int page_number = tessedit_page_number;
   if (page_number < 0)
     page_number = 0;
   FILE* fp = fopen(argv[1], "rb");
   if (fp == NULL) {
-    tprintf("Image file %s cannot be opened!\n", argv[1]);
+    tprintf(_("Image file %s cannot be opened!\n"), argv[1]);
     exit(1);
   }
-#ifdef HAVE_LIBLEPT
   int page = page_number;
+  int npages = 0;
   bool is_tiff = fileFormatIsTiff(fp);
+  if (is_tiff) {
+    int tiffstat = tiffGetCount(fp, &npages);
+    if (tiffstat == 1) {
+      fprintf (stderr, _("Error reading file %s!\n"), argv[1]);
+      fclose(fp);
+      exit(1);
+    }
+  }
   fclose(fp);
 
+  Pix *pix;
   if (is_tiff) {
     for (; (pix = pixReadTiff(argv[1], page)) != NULL; ++page) {
       if (page > 0)
-        tprintf("Page %d\n", page);
+        tprintf(_("Page %d\n"), page);
       char page_str[kMaxIntSize];
       snprintf(page_str, kMaxIntSize - 1, "%d", page);
       api.SetVariable("applybox_page", page_str);
 
       // Run tesseract on the page!
-      TesseractImage(argv[1], NULL, pix, page, &api, &text_out);
+      TesseractImage(argv[1], pix, page, &api, &text_out);
       pixDestroy(&pix);
-      if (tessedit_page_number >= 0) {
+      if (tessedit_page_number >= 0 || npages == 1) {
         break;
       }
     }
   } else {
     // The file is not a tiff file, so use the general pixRead function.
     // If the image fails to read, try it as a list of filenames.
-    PIX* pix = pixRead(argv[1]);
+    pix = pixRead(argv[1]);
     if (pix == NULL) {
-      FILE* fp = fopen(argv[1], "r");
-      if (fp == NULL) {
-        tprintf("File %s cannot be opened!\n", argv[1]);
+      FILE* fimg = fopen(argv[1], "r");
+      if (fimg == NULL) {
+        tprintf(_("File %s cannot be opened!\n"), argv[1]);
+        fclose(fimg);
         exit(1);
       }
       char filename[MAX_PATH];
-      while (fgets(filename, sizeof(filename), fp) != NULL) {
+      while (fgets(filename, sizeof(filename), fimg) != NULL) {
         chomp_string(filename);
         pix = pixRead(filename);
         if (pix == NULL) {
-          tprintf("Image file %s cannot be read!\n", filename);
+          tprintf(_("Image file %s cannot be read!\n"), filename);
+          fclose(fimg);
           exit(1);
         }
-        tprintf("Page %d : %s\n", page, filename);
-        TesseractImage(filename, NULL, pix, page, &api, &text_out);
+        tprintf(_("Page %d : %s\n"), page, filename);
+        TesseractImage(filename, pix, page, &api, &text_out);
         pixDestroy(&pix);
         ++page;
       }
-      fclose(fp);
+      fclose(fimg);
     } else {
-      TesseractImage(argv[1], NULL, pix, 0, &api, &text_out);
+      TesseractImage(argv[1], pix, 0, &api, &text_out);
       pixDestroy(&pix);
     }
   }
-#else
-#ifdef _TIFFIO_
-  int len = strlen(argv[1]);
-  char* ext = new char[5];
-  for (int i=4; i>=0; i--)
-    ext[4-i] = (char) tolower((int) argv[1][len - i]);
-  if (len > 3 && (strcmp("tif",  ext + 1) == 0 || strcmp("tiff", ext) == 0)) {
-    // Use libtiff to read a tif file so multi-page can be handled.
-    // The page number so the tiff file can be closed and reopened.
-    TIFF* archive = NULL;
-    do {
-      // Since libtiff keeps all read images in memory we have to close the
-      // file and reopen it for every page, and seek to the appropriate page.
-      if (archive != NULL)
-        TIFFClose(archive);
-      archive = TIFFOpen(argv[1], "r");
-      if (archive == NULL) {
-        tprintf("Read of file %s failed\n", argv[1]);
-        exit(1);
-      }
-      if (page_number > 0)
-        tprintf("Page %d\n", page_number);
 
-      // Seek to the appropriate page.
-      for (int i = 0; i < page_number; ++i) {
-        TIFFReadDirectory(archive);
-      }
-      char page_str[kMaxIntSize];
-      snprintf(page_str, kMaxIntSize - 1, "%d", page_number);
-      api.SetVariable("applybox_page", page_str);
-      // Read the current page into the Tesseract image.
-      IMAGE image;
-      read_tiff_image(archive, &image);
-
-      // Run tesseract on the page!
-      TesseractImage(argv[1], &image, NULL, page_number, &api, &text_out);
-      ++page_number;
-    // Do this while there are more pages in the tiff file.
-    } while (TIFFReadDirectory(archive) &&
-             (page_number <= tessedit_page_number || tessedit_page_number < 0));
-    TIFFClose(archive);
-  } else {
-#endif
-    // Using built-in image library to read bmp, or tiff without libtiff.
-    if (image.read_header(argv[1]) < 0) {
-      tprintf("Read of file %s failed.\n", argv[1]);
-      exit(1);
-    }
-    if (image.read(image.get_ysize ()) < 0)
-      MEMORY_OUT.error(argv[0], EXIT, "Read of image %s", argv[1]);
-    invert_image(&image);
-    TesseractImage(argv[1], &image, NULL, 0, &api, &text_out);
-#ifdef _TIFFIO_
-  }
-#endif
-#endif  // HAVE_LIBLEPT
-
-  bool output_hocr = tessedit_create_hocr;
+  bool output_hocr = false;
+  api.GetBoolVariable("tessedit_create_hocr", &output_hocr);
+  bool output_box = false;
+  api.GetBoolVariable("tessedit_create_boxfile", &output_box);
   outfile = argv[2];
-  outfile += output_hocr ? ".html" : ".txt";
-  fp = fopen(outfile.string(), "w");
-  if (fp == NULL) {
-    tprintf("Cannot create output file %s\n", outfile.string());
+  outfile += output_hocr ? ".html" : output_box ? ".box" : ".txt";
+  FILE* fout = fopen(outfile.string(), "w");
+  if (fout == NULL) {
+    tprintf(_("Cannot create output file %s\n"), outfile.string());
+    fclose(fout);
     exit(1);
   }
   if (output_hocr) {
@@ -340,12 +294,12 @@ int main(int argc, char **argv) {
         "<meta http-equiv=\"Content-Type\" content=\"text/html;"
         "charset=utf-8\" >\n<meta name='ocr-system' content='tesseract'>\n"
         "</head>\n<body>\n";
-    fprintf(fp, "%s", html_header);
-  } 
-  fwrite(text_out.string(), 1, text_out.length(), fp);
+    fprintf(fout, "%s", html_header);
+  }
+  fwrite(text_out.string(), 1, text_out.length(), fout);
   if (output_hocr)
-    fprintf(fp, "</body>\n</html>\n");
-  fclose(fp);
+    fprintf(fout, "</body>\n</html>\n");
+  fclose(fout);
 
   return 0;                      //Normal exit
 }

@@ -20,7 +20,7 @@
 #ifndef TESSERACT_CCUTIL_UNICITY_TABLE_H_
 #define TESSERACT_CCUTIL_UNICITY_TABLE_H_
 
-#include "callback.h"
+#include "tesscallback.h"
 #include "errcode.h"
 #include "genericvector.h"
 
@@ -33,63 +33,63 @@ template <typename T>
 class UnicityTable {
  public:
   UnicityTable();
-  // Clear the structures and deallocate internal structures.
+  /// Clear the structures and deallocate internal structures.
   ~UnicityTable();
 
-  // Reserve some memory. If there is size or more elements, the table will
-  // then allocate size * 2 elements.
+  /// Reserve some memory. If there is size or more elements, the table will
+  /// then allocate size * 2 elements.
   void reserve(int size);
 
-  // Return the size used.
+  /// Return the size used.
   int size() const;
 
-  // Return the object from an id.
+  /// Return the object from an id.
   T get(int id) const;
 
-  // Return the id of the T object.
-  // This method NEEDS a compare_callback to be passed to
-  // set_compare_callback.
+  /// Return the id of the T object.
+  /// This method NEEDS a compare_callback to be passed to
+  /// set_compare_callback.
   int get_id(T object) const;
 
-  // Return true if T is in the table
+  /// Return true if T is in the table
   bool contains(T object) const;
 
-  // Return true if the id is valid
+  /// Return true if the id is valid
   T contains_id(int id) const;
 
-  // Add an element in the table
+  /// Add an element in the table
   int push_back(T object);
 
-  // Add a callback to be called to delete the elements when the table took
-  // their ownership.
-  void set_clear_callback(Callback1<T>* cb);
+  /// Add a callback to be called to delete the elements when the table took
+  /// their ownership.
+  void set_clear_callback(TessCallback1<T>* cb);
 
-  // Add a callback to be called to compare the elements when needed (contains,
-  // get_id, ...)
-  void set_compare_callback(ResultCallback2<bool, T const &, T const &>* cb);
+  /// Add a callback to be called to compare the elements when needed (contains,
+  /// get_id, ...)
+  void set_compare_callback(TessResultCallback2<bool, T const &, T const &>* cb);
 
-  // Clear the table, calling the callback function if any.
-  // All the owned Callbacks are also deleted.
-  // If you don't want the Callbacks to be deleted, before calling clear, set
-  // the callback to NULL.
+  /// Clear the table, calling the callback function if any.
+  /// All the owned Callbacks are also deleted.
+  /// If you don't want the Callbacks to be deleted, before calling clear, set
+  /// the callback to NULL.
   void clear();
 
-  // This method clear the current object, then, does a shallow copy of
-  // its argument, and finally invalidate its argument.
+  /// This method clear the current object, then, does a shallow copy of
+  /// its argument, and finally invalidate its argument.
   void move(UnicityTable<T>* from);
 
-  // Read/Write the table to a file. This does _NOT_ read/write the callbacks.
-  // The Callback given must be permanent since they will be called more than
-  // once. The given callback will be deleted at the end.
-  // Returns false on read/write error.
-  bool write(FILE* f, ResultCallback2<bool, FILE*, T const &>* cb);
-  // swap is used to switch the endianness.
-  bool read(FILE* f, ResultCallback3<bool, FILE*, T*, bool>* cb, bool swap);
+  /// Read/Write the table to a file. This does _NOT_ read/write the callbacks.
+  /// The Callback given must be permanent since they will be called more than
+  /// once. The given callback will be deleted at the end.
+  /// Returns false on read/write error.
+  bool write(FILE* f, TessResultCallback2<bool, FILE*, T const &>* cb);
+  /// swap is used to switch the endianness.
+  bool read(FILE* f, TessResultCallback3<bool, FILE*, T*, bool>* cb, bool swap);
 
  private:
   GenericVector<T> table_;
   // Mutable because Run method is not const
-  mutable ResultCallback2<bool, T const &, T const &>* compare_cb_;
+  mutable TessResultCallback2<bool, T const &, T const &>* compare_cb_;
 };
 
 template <typename T>
@@ -97,7 +97,7 @@ class UnicityTableEqEq : public UnicityTable<T> {
  public:
   UnicityTableEqEq() {
     UnicityTable<T>::set_compare_callback(
-        NewPermanentCallback(tesseract::cmp_eq<T>));
+        NewPermanentTessCallback(tesseract::cmp_eq<T>));
   }
 };
 
@@ -161,14 +161,14 @@ int UnicityTable<T>::push_back(T object) {
 // Add a callback to be called to delete the elements when the table took
 // their ownership.
 template <typename T>
-void UnicityTable<T>::set_clear_callback(Callback1<T>* cb) {
+void UnicityTable<T>::set_clear_callback(TessCallback1<T>* cb) {
   table_.set_clear_callback(cb);
 }
 
 // Add a callback to be called to delete the elements when the table took
 // their ownership.
 template <typename T>
-void UnicityTable<T>::set_compare_callback(ResultCallback2<bool, T const &, T const &>* cb) {
+void UnicityTable<T>::set_compare_callback(TessResultCallback2<bool, T const &, T const &>* cb) {
   table_.set_compare_callback(cb);
   compare_cb_ = cb;
 }
@@ -181,13 +181,13 @@ void UnicityTable<T>::clear() {
 
 template <typename T>
 bool UnicityTable<T>::write(FILE* f,
-                            ResultCallback2<bool, FILE*, T const &>* cb) {
+                            TessResultCallback2<bool, FILE*, T const &>* cb) {
   return table_.write(f, cb);
 }
 
 template <typename T>
 bool UnicityTable<T>::read(
-    FILE* f, ResultCallback3<bool, FILE*, T*, bool>* cb, bool swap) {
+    FILE* f, TessResultCallback3<bool, FILE*, T*, bool>* cb, bool swap) {
   return table_.read(f, cb, swap);
 }
 

@@ -17,8 +17,14 @@
  *
  **********************************************************************/
 
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "mfcpch.h"
-#include          "stepblob.h"
+#include "stepblob.h"
+#include "allheaders.h"
 
 ELISTIZE_S (C_BLOB)
 /**********************************************************************
@@ -160,6 +166,14 @@ C_BLOB::C_BLOB(                              //constructor
     }
   }
 }
+
+// Simpler constructor to build a blob from a single outline that has
+// already been fully initialized.
+C_BLOB::C_BLOB(C_OUTLINE* outline) {
+  C_OUTLINE_IT it(&outlines);
+  it.add_to_end(outline);
+}
+
 
 // Build and return a fake blob containing a single fake outline with no
 // steps.
@@ -315,6 +329,24 @@ void C_BLOB::rotate(const FCOORD& rotation) {
   RotateOutlineList(rotation, &outlines);
 }
 
+static void render_outline_list(C_OUTLINE_LIST *list,
+                                int left, int top, Pix* pix) {
+  C_OUTLINE_IT it(list);
+  for (it.mark_cycle_pt(); !it.cycled_list(); it.forward()) {
+    C_OUTLINE* outline = it.data();
+    outline->render(left, top, pix);
+    if (!outline->child()->empty())
+      render_outline_list(outline->child(), left, top, pix);
+  }
+}
+
+// Returns a Pix rendering of the blob. pixDestroy after use.
+Pix* C_BLOB::render() {
+  TBOX box = bounding_box();
+  Pix* pix = pixCreate(box.width(), box.height(), 1);
+  render_outline_list(&outlines, box.left(), box.top(), pix);
+  return pix;
+}
 
 /**********************************************************************
  * C_BLOB::plot

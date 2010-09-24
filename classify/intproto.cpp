@@ -15,9 +15,14 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  ******************************************************************************/
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
           Include Files and Type Defines
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "helpers.h"
 #include "intproto.h"
 #include "picofeat.h"
@@ -26,7 +31,6 @@
 #include "const.h"
 #include "ndminx.h"
 #include "svmnode.h"
-#include "adaptmatch.h"
 #include "globals.h"
 #include "classify.h"
 #include "genericvector.h"
@@ -59,7 +63,7 @@
 #define INT_MAX_Y (  DISPLAY_OFFSET)
 #define DOUBLE_OFFSET 0.095
 
-/* define pad used to snap near horiz/vertical protos to horiz/vertical */
+/** define pad used to snap near horiz/vertical protos to horiz/vertical */
 #define HV_TOLERANCE  (0.0025)   /* approx 0.9 degrees */
 
 typedef enum
@@ -107,13 +111,13 @@ FILL_SPEC;
 #define OLD_WERDS_PER_CONFIG_VEC ((OLD_MAX_NUM_CONFIGS + BITS_PER_WERD - 1) /\
                                   BITS_PER_WERD)
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
             Macros
-----------------------------------------------------------------------------**/
-/* macro for performing circular increments of bucket indices */
+-----------------------------------------------------------------------------*/
+/** macro for performing circular increments of bucket indices */
 #define CircularIncrement(i,r)  (((i) < (r) - 1)?((i)++):((i) = 0))
 
-/* macro for mapping floats to ints without bounds checking */
+/** macro for mapping floats to ints without bounds checking */
 #define MapParam(P,O,N)   (floor (((P) + (O)) * (N)))
 
 /*---------------------------------------------------------------------------
@@ -131,12 +135,12 @@ void DoFill(FILL_SPEC *FillSpec,
 
 BOOL8 FillerDone(TABLE_FILLER *Filler);
 
-void FillPPCircularBits (uinT32
-                         ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
-                         int Bit, FLOAT32 Center, FLOAT32 Spread);
+void FillPPCircularBits(uinT32
+                        ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
+                        int Bit, FLOAT32 Center, FLOAT32 Spread, bool debug);
 
-void FillPPLinearBits (uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
-                       int Bit, FLOAT32 Center, FLOAT32 Spread);
+void FillPPLinearBits(uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
+                      int Bit, FLOAT32 Center, FLOAT32 Spread, bool debug);
 
 #ifndef GRAPHICS_DISABLED
 CLASS_ID GetClassToDebug(const char *Prompt);
@@ -168,18 +172,18 @@ void RenderIntProto(void *window,
 
 int TruncateParam(FLOAT32 Param, int Min, int Max, char *Id);
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
         Global Data Definitions and Declarations
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
 
 /* global display lists used to display proto and feature match information*/
 ScrollView *IntMatchWindow = NULL;
 ScrollView *FeatureDisplayWindow = NULL;
 ScrollView *ProtoDisplayWindow = NULL;
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
         Variables
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
 
 /* control knobs */
 INT_VAR(classify_num_cp_levels, 3, "Number of Class Pruner Levels");
@@ -199,24 +203,25 @@ double_VAR(classify_pp_angle_pad, 45.0, "Proto Pruner Angle Pad");
 double_VAR(classify_pp_end_pad, 0.5, "Proto Prune End Pad");
 double_VAR(classify_pp_side_pad, 2.5, "Proto Pruner Side Pad");
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
               Public Code
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void AddIntClass(INT_TEMPLATES Templates, CLASS_ID ClassId, INT_CLASS Class) {
-/*
- ** Parameters:
- **   Templates templates to add new class to
- **   ClassId   class id to associate new class with
- **   Class   class data structure to add to templates
- ** Globals: none
- ** Operation: This routine adds a new class structure to a set of
- **                templates. Classes have to be added to Templates in
- **                the order of increasing ClassIds.
- ** Return: none
- ** Exceptions: none
- ** History: Mon Feb 11 11:52:08 1991, DSJ, Created.
+/**
+ * This routine adds a new class structure to a set of
+ * templates. Classes have to be added to Templates in
+ * the order of increasing ClassIds.
+ *
+ * @param Templates templates to add new class to
+ * @param ClassId   class id to associate new class with
+ * @param Class   class data structure to add to templates
+ *
+ * Globals: none
+ *
+ * @note Exceptions: none
+ * @note History: Mon Feb 11 11:52:08 1991, DSJ, Created.
  */
+void AddIntClass(INT_TEMPLATES Templates, CLASS_ID ClassId, INT_CLASS Class) {
   int Pruner;
   uinT32 *Word;
 
@@ -243,17 +248,19 @@ void AddIntClass(INT_TEMPLATES Templates, CLASS_ID ClassId, INT_CLASS Class) {
 
 
 /*---------------------------------------------------------------------------*/
-int AddIntConfig(INT_CLASS Class) {
-/*
- ** Parameters:
- **   Class class to add new configuration to
- ** Globals: none
- ** Operation: This routine returns the index of the next free config
- **   in Class.
- ** Return: Index of next free config.
- ** Exceptions: none
- ** History: Mon Feb 11 14:44:40 1991, DSJ, Created.
+/**
+ * This routine returns the index of the next free config
+ * in Class.
+ *
+ * @param Class class to add new configuration to
+ *
+ * Globals: none
+ *
+ * @return Index of next free config.
+ * @note Exceptions: none
+ * @note History: Mon Feb 11 14:44:40 1991, DSJ, Created.
  */
+int AddIntConfig(INT_CLASS Class) {
   int Index;
 
   assert(Class->NumConfigs < MAX_NUM_CONFIGS);
@@ -265,17 +272,19 @@ int AddIntConfig(INT_CLASS Class) {
 
 
 /*---------------------------------------------------------------------------*/
-int AddIntProto(INT_CLASS Class) {
-/*
- ** Parameters:
- **   Class class to add new proto to
- ** Globals: none
- ** Operation: This routine allocates the next free proto in Class and
- **   returns its index.
- ** Return: Proto index of new proto.
- ** Exceptions: none
- ** History: Mon Feb 11 13:26:41 1991, DSJ, Created.
+/**
+ * This routine allocates the next free proto in Class and
+ * returns its index.
+ *
+ * @param Class class to add new proto to
+ *
+ * Globals: none
+ *
+ * @return Proto index of new proto.
+ * @note Exceptions: none
+ * @note History: Mon Feb 11 13:26:41 1991, DSJ, Created.
  */
+int AddIntProto(INT_CLASS Class) {
   int Index;
   int ProtoSetId;
   PROTO_SET ProtoSet;
@@ -358,7 +367,8 @@ void AddProtoToClassPruner (PROTO Proto, CLASS_ID ClassId,
 
 
 /*---------------------------------------------------------------------------*/
-void AddProtoToProtoPruner(PROTO Proto, int ProtoId, INT_CLASS Class) {
+void AddProtoToProtoPruner(PROTO Proto, int ProtoId,
+                           INT_CLASS Class, bool debug) {
 /*
  ** Parameters:
  **   Proto floating-pt proto to be added to proto pruner
@@ -391,7 +401,8 @@ void AddProtoToProtoPruner(PROTO Proto, int ProtoId, INT_CLASS Class) {
 #endif
 
   FillPPCircularBits (ProtoSet->ProtoPruner[PRUNER_ANGLE], Index,
-                      Angle + ANGLE_SHIFT, classify_pp_angle_pad / 360.0);
+                      Angle + ANGLE_SHIFT, classify_pp_angle_pad / 360.0,
+                      debug);
 
   Angle *= 2.0 * PI;
   Length = Proto->Length;
@@ -403,7 +414,7 @@ void AddProtoToProtoPruner(PROTO Proto, int ProtoId, INT_CLASS Class) {
              fabs (sin (Angle)) * (classify_pp_side_pad *
                                    GetPicoFeatureLength ()));
 
-  FillPPLinearBits (ProtoSet->ProtoPruner[PRUNER_X], Index, X, Pad);
+  FillPPLinearBits(ProtoSet->ProtoPruner[PRUNER_X], Index, X, Pad, debug);
 
   Y = Proto->Y + Y_SHIFT;
   Pad = MAX (fabs (sin (Angle)) * (Length / 2.0 +
@@ -412,7 +423,7 @@ void AddProtoToProtoPruner(PROTO Proto, int ProtoId, INT_CLASS Class) {
              fabs (cos (Angle)) * (classify_pp_side_pad *
                                    GetPicoFeatureLength ()));
 
-  FillPPLinearBits(ProtoSet->ProtoPruner[PRUNER_Y], Index, Y, Pad);
+  FillPPLinearBits(ProtoSet->ProtoPruner[PRUNER_Y], Index, Y, Pad, debug);
 }                                /* AddProtoToProtoPruner */
 
 
@@ -518,8 +529,9 @@ void ConvertConfig(BIT_VECTOR Config, int ConfigId, INT_CLASS Class) {
 }                                /* ConvertConfig */
 
 
+namespace tesseract {
 /*---------------------------------------------------------------------------*/
-void ConvertProto(PROTO Proto, int ProtoId, INT_CLASS Class) {
+void Classify::ConvertProto(PROTO Proto, int ProtoId, INT_CLASS Class) {
 /*
  ** Parameters:
  **   Proto floating-pt proto to be converted to integer format
@@ -564,7 +576,6 @@ void ConvertProto(PROTO Proto, int ProtoId, INT_CLASS Class) {
 
 
 /*---------------------------------------------------------------------------*/
-namespace tesseract {
 INT_TEMPLATES Classify::CreateIntTemplates(CLASSES FloatProtos,
                                            const UNICHARSET&
                                            target_unicharset) {
@@ -613,7 +624,8 @@ INT_TEMPLATES Classify::CreateIntTemplates(CLASSES FloatProtos,
     for (ProtoId = 0; ProtoId < FClass->NumProtos; ProtoId++) {
       AddIntProto(IClass);
       ConvertProto(ProtoIn(FClass, ProtoId), ProtoId, IClass);
-      AddProtoToProtoPruner(ProtoIn(FClass, ProtoId), ProtoId, IClass);
+      AddProtoToProtoPruner(ProtoIn(FClass, ProtoId), ProtoId, IClass,
+                            classify_learning_debug_level >= 2);
       AddProtoToClassPruner(ProtoIn(FClass, ProtoId), ClassId, IntTemplates);
     }
 
@@ -1121,8 +1133,8 @@ INT_TEMPLATES Classify::ReadIntTemplates(FILE *File) {
     }
   }
   if (version_id >= 4) {
-    this->fontinfo_table_.read(File, NewPermanentCallback(read_info), swap);
-    this->fontset_table_.read(File, NewPermanentCallback(read_set), swap);
+    this->fontinfo_table_.read(File, NewPermanentTessCallback(read_info), swap);
+    this->fontset_table_.read(File, NewPermanentTessCallback(read_set), swap);
   }
 
   // Clean up.
@@ -1133,12 +1145,10 @@ INT_TEMPLATES Classify::ReadIntTemplates(FILE *File) {
   return (Templates);
 }                                /* ReadIntTemplates */
 
-} // namespace tesseract
-
 
 /*---------------------------------------------------------------------------*/
 #ifndef GRAPHICS_DISABLED
-void ShowMatchDisplay() {
+void Classify::ShowMatchDisplay() {
 /*
  ** Parameters: none
  ** Globals:
@@ -1210,7 +1220,6 @@ void ShowMatchDisplay() {
 #endif
 
 /*---------------------------------------------------------------------------*/
-namespace tesseract {
 void Classify::WriteIntTemplates(FILE *File, INT_TEMPLATES Templates,
                                  const UNICHARSET& target_unicharset) {
 /*
@@ -1277,15 +1286,15 @@ void Classify::WriteIntTemplates(FILE *File, INT_TEMPLATES Templates,
   }
 
   /* Write the fonts info tables */
-  this->fontinfo_table_.write(File, NewPermanentCallback(write_info));
-  this->fontset_table_.write(File, NewPermanentCallback(write_set));
+  this->fontinfo_table_.write(File, NewPermanentTessCallback(write_info));
+  this->fontset_table_.write(File, NewPermanentTessCallback(write_set));
 }                                /* WriteIntTemplates */
 } // namespace tesseract
 
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
               Private Code
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 FLOAT32 BucketStart(int Bucket, FLOAT32 Offset, int NumBuckets) {
 /*
@@ -1402,9 +1411,8 @@ BOOL8 FillerDone(TABLE_FILLER *Filler) {
 
 
 /*---------------------------------------------------------------------------*/
-void
-FillPPCircularBits (uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
-                    int Bit, FLOAT32 Center, FLOAT32 Spread) {
+void FillPPCircularBits(uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
+                        int Bit, FLOAT32 Center, FLOAT32 Spread, bool debug) {
 /*
  ** Parameters:
  **   ParamTable  table of bit vectors, one per param bucket
@@ -1434,8 +1442,7 @@ FillPPCircularBits (uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
   LastBucket = (int) floor ((Center + Spread) * NUM_PP_BUCKETS);
   if (LastBucket >= NUM_PP_BUCKETS)
     LastBucket -= NUM_PP_BUCKETS;
-  if (classify_learning_debug_level >= 2)
-    cprintf ("Circular fill from %d to %d", FirstBucket, LastBucket);
+  if (debug) tprintf("Circular fill from %d to %d", FirstBucket, LastBucket);
   for (i = FirstBucket; TRUE; CircularIncrement (i, NUM_PP_BUCKETS)) {
     SET_BIT (ParamTable[i], Bit);
 
@@ -1448,9 +1455,8 @@ FillPPCircularBits (uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
 
 
 /*---------------------------------------------------------------------------*/
-void
-FillPPLinearBits (uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
-                  int Bit, FLOAT32 Center, FLOAT32 Spread) {
+void FillPPLinearBits(uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
+                      int Bit, FLOAT32 Center, FLOAT32 Spread, bool debug) {
 /*
  ** Parameters:
  **   ParamTable  table of bit vectors, one per param bucket
@@ -1479,8 +1485,7 @@ FillPPLinearBits (uinT32 ParamTable[NUM_PP_BUCKETS][WERDS_PER_PP_VECTOR],
   if (LastBucket >= NUM_PP_BUCKETS)
     LastBucket = NUM_PP_BUCKETS - 1;
 
-  if (classify_learning_debug_level >= 2)
-    cprintf ("Linear fill from %d to %d", FirstBucket, LastBucket);
+  if (debug) tprintf("Linear fill from %d to %d", FirstBucket, LastBucket);
   for (i = FirstBucket; i <= LastBucket; i++)
     SET_BIT (ParamTable[i], Bit);
 
@@ -1657,21 +1662,23 @@ void GetNextFill(TABLE_FILLER *Filler, FILL_SPEC *Fill) {
 
 
 /*---------------------------------------------------------------------------*/
+/**
+ * This routine computes a data structure (Filler)
+ * which can be used to fill in a rectangle surrounding
+ * the specified Proto.
+ *
+ * @param EndPad, SidePad, AnglePad padding to add to proto
+ * @param Proto       proto to create a filler for
+ * @param Filler        place to put table filler
+ *
+ * Globals: none
+ *
+ * @return none (results are returned in Filler)
+ * @note Exceptions: none
+ * @note History: Thu Feb 14 09:27:05 1991, DSJ, Created.
+ */
 void InitTableFiller (FLOAT32 EndPad, FLOAT32 SidePad,
                       FLOAT32 AnglePad, PROTO Proto, TABLE_FILLER * Filler)
-/*
- ** Parameters:
- **   EndPad, SidePad, AnglePad padding to add to proto
- **   Proto       proto to create a filler for
- **   Filler        place to put table filler
- ** Globals: none
- ** Operation: This routine computes a data structure (Filler)
- **   which can be used to fill in a rectangle surrounding
- **   the specified Proto.
- ** Return: none (results are returned in Filler)
- ** Exceptions: none
- ** History: Thu Feb 14 09:27:05 1991, DSJ, Created.
- */
 #define XS          X_SHIFT
 #define YS          Y_SHIFT
 #define AS          ANGLE_SHIFT
@@ -1859,24 +1866,26 @@ void RenderIntFeature(void *window, INT_FEATURE Feature, C_COL Color) {
 
 
 /*---------------------------------------------------------------------------*/
+/**
+ * This routine extracts the parameters of the specified
+ * proto from the class description and adds a rendering of
+ * the proto onto the ShapeList.
+ *
+ * @param ShapeList shape list to append proto rendering onto
+ * @param Class   class that proto is contained in
+ * @param ProtoId   id of proto to be rendered
+ * @param Color   color to render proto in
+ *
+ * Globals: none
+ *
+ * @return New shape list with a rendering of one proto added.
+ * @note Exceptions: none
+ * @note History: Thu Mar 21 10:21:09 1991, DSJ, Created.
+ */
 void RenderIntProto(void *window,
                     INT_CLASS Class,
                     PROTO_ID ProtoId,
                     C_COL Color) {
-/*
- ** Parameters:
- **   ShapeList shape list to append proto rendering onto
- **   Class   class that proto is contained in
- **   ProtoId   id of proto to be rendered
- **   Color   color to render proto in
- ** Globals: none
- ** Operation: This routine extracts the parameters of the specified
- **   proto from the class description and adds a rendering of
- **   the proto onto the ShapeList.
- ** Return: New shape list with a rendering of one proto added.
- ** Exceptions: none
- ** History: Thu Mar 21 10:21:09 1991, DSJ, Created.
- */
   PROTO_SET ProtoSet;
   INT_PROTO Proto;
   int ProtoSetIndex;
@@ -1924,20 +1933,22 @@ void RenderIntProto(void *window,
 #endif
 
 /*---------------------------------------------------------------------------*/
-int TruncateParam(FLOAT32 Param, int Min, int Max, char *Id) {
-/*
- ** Parameters:
- **   Param   parameter value to be truncated
- **   Min, Max  parameter limits (inclusive)
- **   Id    string id of parameter for error messages
- ** Globals: none
- ** Operation: This routine truncates Param to lie within the range
- **   of Min-Max inclusive.  If a truncation is performed, and
- **   Id is not null, an warning message is printed.
- ** Return: Truncated parameter.
- ** Exceptions: none
- ** History: Fri Feb  8 11:54:28 1991, DSJ, Created.
+/**
+ * This routine truncates Param to lie within the range
+ * of Min-Max inclusive.  If a truncation is performed, and
+ * Id is not null, an warning message is printed.
+ *
+ * @param Param   parameter value to be truncated
+ * @param Min, Max  parameter limits (inclusive)
+ * @param Id    string id of parameter for error messages
+ *
+ * Globals: none
+ *
+ * @return Truncated parameter.
+ * @note Exceptions: none
+ * @note History: Fri Feb  8 11:54:28 1991, DSJ, Created.
  */
+int TruncateParam(FLOAT32 Param, int Min, int Max, char *Id) {
   if (Param < Min) {
     if (Id)
       cprintf("Warning: Param %s truncated from %f to %d!\n",
@@ -1955,11 +1966,11 @@ int TruncateParam(FLOAT32 Param, int Min, int Max, char *Id) {
 
 /*---------------------------------------------------------------------------*/
 
-void InitIntMatchWindowIfReqd() {
-/*
- **     Operation: Initializes the int matcher window if it is not already
- **     initialized.
+/**
+ * Initializes the int matcher window if it is not already
+ * initialized.
  */
+void InitIntMatchWindowIfReqd() {
   if (IntMatchWindow == NULL) {
     IntMatchWindow = c_create_window("IntMatchWindow", 50, 200,
                                      520, 520,
@@ -1976,11 +1987,11 @@ void InitIntMatchWindowIfReqd() {
   }
 }
 
-void InitProtoDisplayWindowIfReqd() {
-/*
- **     Operation: Initializes the proto display window if it is not already
- **     initialized.
+/**
+ * Initializes the proto display window if it is not already
+ * initialized.
  */
+void InitProtoDisplayWindowIfReqd() {
   if (ProtoDisplayWindow == NULL) {
     ProtoDisplayWindow = c_create_window("ProtoDisplayWindow", 50, 200,
                                          520, 520,
@@ -1988,11 +1999,11 @@ void InitProtoDisplayWindowIfReqd() {
   }
 }
 
-void InitFeatureDisplayWindowIfReqd() {
-/*
- **     Operation: Initializes the feature display window if it is not already
- **     initialized.
+/**
+ * Initializes the feature display window if it is not already
+ * initialized.
  */
+void InitFeatureDisplayWindowIfReqd() {
   if (FeatureDisplayWindow == NULL) {
     FeatureDisplayWindow = c_create_window("FeatureDisplayWindow", 50, 200,
                                            520, 520,

@@ -18,23 +18,21 @@
 #ifndef FLOAT2INT_H
 #define FLOAT2INT_H
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
           Include Files and Type Defines
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
 #include "intmatcher.h"
 #include "ocrfeatures.h"
 
 #define INT_FEAT_RANGE    256
 #define BASELINE_Y_SHIFT  (0.25)
 
-/**----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
           Public Function Prototypes
-----------------------------------------------------------------------------**/
+-----------------------------------------------------------------------------*/
 namespace tesseract {
 void ClearCharNormArray(INT_TEMPLATES Templates,
                         CLASS_NORMALIZATION_ARRAY CharNormArray);
 }  // namespace tesseract.
-
-void ComputeIntFeatures(FEATURE_SET Features, INT_FEATURE_ARRAY IntFeatures);
 
 #endif

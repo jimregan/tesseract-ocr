@@ -18,17 +18,27 @@
 ///////////////////////////////////////////////////////////////////////
 //
 
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #ifndef GRAPHICS_DISABLED
 // This class contains the main ScrollView-logic,
 // e.g. parsing & sending messages, images etc.
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(disable:4786)  // Don't give stupid warnings for stl
+#pragma warning(disable:4018)  // signed/unsigned warnings
+#pragma warning(disable:4530)  // exception warnings
 #endif
 
 const int kSvPort = 8461;
 const int kMaxMsgSize = 4096;
 const int kMaxIntPairSize = 45;  // Holds %d,%d, for upto 64 bit.
 
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
 #include "scrollview.h"
 
 #include <stdarg.h>
@@ -78,10 +88,10 @@ SVEvent* SVEvent::copy() {
   return any;
 }
 
-// This is the main loop which handles the ScrollView-logic from the server
-// to the client. It basically loops through messages, parses them to events
-// and distributes it to the waiting handlers.
-// It is run from a different thread and synchronizes via SVSync.
+/// This is the main loop which handles the ScrollView-logic from the server
+/// to the client. It basically loops through messages, parses them to events
+/// and distributes it to the waiting handlers.
+/// It is run from a different thread and synchronizes via SVSync.
 void* ScrollView::MessageReceiver(void* a) {
   int counter_event_id = 0;  // ongoing counter
   char* message = NULL;
@@ -117,7 +127,18 @@ void* ScrollView::MessageReceiver(void* a) {
           cur->parameter[strlen(p)] = '\0';
         }
         cur->type = static_cast<SVEventType>(ev_type);
-        cur->y = cur->window->TranslateYCoordinate(cur->y);
+        // Correct selection coordinates so x,y is the min pt and size is +ve.
+        if (cur->x_size > 0)
+          cur->x -= cur->x_size;
+        else
+          cur->x_size = -cur->x_size;
+        if (cur->y_size > 0)
+          cur->y -= cur->y_size;
+        else
+          cur->y_size = -cur->y_size;
+        // Returned y will be the bottom-left if y is reversed.
+        if (cur->window->y_axis_is_reversed_)
+          cur->y = cur->window->TranslateYCoordinate(cur->y + cur->y_size);
         cur->counter = counter_event_id;
         // Increase by 2 since we will also create an SVET_ANY event from cur,
         // which will have a counter_id of cur + 1 (and thus gets processed
@@ -135,7 +156,7 @@ void* ScrollView::MessageReceiver(void* a) {
                                                           cur->type);
         std::pair<ScrollView*, SVEventType> awaiting_list_any(cur->window,
                                                               SVET_ANY);
-        std::pair<ScrollView*, SVEventType> awaiting_list_any_window(NULL,
+        std::pair<ScrollView*, SVEventType> awaiting_list_any_window((ScrollView*)0,
                                                               SVET_ANY);
         waiting_for_events_mu->Lock();
         if (waiting_for_events.count(awaiting_list) > 0) {
@@ -230,14 +251,14 @@ int table_colors[ScrollView::GREEN_YELLOW+1][4]= {
 SVNetwork* ScrollView::stream_ = NULL;
 int ScrollView::nr_created_windows_ = 0;
 
-// Calls Initialize with all arguments given.
+/// Calls Initialize with all arguments given.
 ScrollView::ScrollView(const char* name, int x_pos, int y_pos, int x_size,
                        int y_size, int x_canvas_size, int y_canvas_size,
                        bool y_axis_reversed, const char* server_name) {
   Initialize(name, x_pos, y_pos, x_size, y_size, x_canvas_size, y_canvas_size,
              y_axis_reversed, server_name);}
 
-// Calls Initialize with default argument for server_name_.
+/// Calls Initialize with default argument for server_name_.
 ScrollView::ScrollView(const char* name, int x_pos, int y_pos, int x_size,
                        int y_size, int x_canvas_size, int y_canvas_size,
                        bool y_axis_reversed) {
@@ -245,14 +266,14 @@ ScrollView::ScrollView(const char* name, int x_pos, int y_pos, int x_size,
              y_axis_reversed, "localhost");
 }
 
-// Calls Initialize with default argument for server_name_ & y_axis_reversed.
+/// Calls Initialize with default argument for server_name_ & y_axis_reversed.
 ScrollView::ScrollView(const char* name, int x_pos, int y_pos, int x_size,
                        int y_size, int x_canvas_size, int y_canvas_size) {
   Initialize(name, x_pos, y_pos, x_size, y_size, x_canvas_size, y_canvas_size,
              false, "localhost");
 }
 
-// Sets up a ScrollView window, depending on the constructor variables.
+/// Sets up a ScrollView window, depending on the constructor variables.
 void ScrollView::Initialize(const char* name, int x_pos, int y_pos, int x_size,
                             int y_size, int x_canvas_size, int y_canvas_size,
                             bool y_axis_reversed, const char* server_name) {
@@ -303,7 +324,7 @@ void ScrollView::Initialize(const char* name, int x_pos, int y_pos, int x_size,
   SVSync::StartThread(StartEventHandler, this);
 }
 
-// Sits and waits for events on this window.
+/// Sits and waits for events on this window.
 void* ScrollView::StartEventHandler(void* a) {
   ScrollView* sv = reinterpret_cast<ScrollView*>(a);
   SVEvent* new_event;
@@ -367,7 +388,7 @@ ScrollView::~ScrollView() {
   delete points_;
 }
 
-// Send a message to the server, attaching the window id.
+/// Send a message to the server, attaching the window id.
 void ScrollView::SendMsg(const char* format, ...) {
   if (!points_->empty)
     SendPolygon();
@@ -384,13 +405,13 @@ void ScrollView::SendMsg(const char* format, ...) {
   stream_->Send(form);
 }
 
-// Send a message to the server without a
-// window id. Used for global events like exit().
+/// Send a message to the server without a
+/// window id. Used for global events like exit().
 void ScrollView::SendRawMessage(const char* msg) {
   stream_->Send(msg);
 }
 
-// Add an Event Listener to this ScrollView Window
+/// Add an Event Listener to this ScrollView Window
 void ScrollView::AddEventHandler(SVEventHandler* listener) {
   event_handler_ = listener;
 }
@@ -419,15 +440,15 @@ void ScrollView::SetEvent(SVEvent* svevent) {
 }
 
 
-// Block until an event of the given type is received.
-// Note: The calling function is responsible for deleting the returned
-// SVEvent afterwards!
+/// Block until an event of the given type is received.
+/// Note: The calling function is responsible for deleting the returned
+/// SVEvent afterwards!
 SVEvent* ScrollView::AwaitEvent(SVEventType type) {
   // Initialize the waiting semaphore.
   SVSemaphore* sem = new SVSemaphore();
   std::pair<ScrollView*, SVEventType> ea(this, type);
   waiting_for_events_mu->Lock();
-  waiting_for_events[ea] = std::pair<SVSemaphore*, SVEvent*> (sem, NULL);
+  waiting_for_events[ea] = std::pair<SVSemaphore*, SVEvent*> (sem, (SVEvent*)0);
   waiting_for_events_mu->Unlock();
   // Wait on it, but first flush.
   stream_->Flush();
@@ -446,9 +467,9 @@ SVEvent* ScrollView::AwaitEvent(SVEventType type) {
 SVEvent* ScrollView::AwaitEventAnyWindow() {
   // Initialize the waiting semaphore.
   SVSemaphore* sem = new SVSemaphore();
-  std::pair<ScrollView*, SVEventType> ea(NULL, SVET_ANY);
+  std::pair<ScrollView*, SVEventType> ea((ScrollView*)0, SVET_ANY);
   waiting_for_events_mu->Lock();
-  waiting_for_events[ea] = std::pair<SVSemaphore*, SVEvent*> (sem, NULL);
+  waiting_for_events[ea] = std::pair<SVSemaphore*, SVEvent*> (sem, (SVEvent*)0);
   waiting_for_events_mu->Unlock();
   // Wait on it.
   stream_->Flush();

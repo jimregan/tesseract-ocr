@@ -1,7 +1,9 @@
 # TODO(luc) Add 'doc' to this list when ready
-SUBDIRS = ccstruct ccutil classify cutil dict image textord viewer wordrec ccmain training tessdata testing java api
+ACLOCAL_AMFLAGS = -I m4
+SUBDIRS = po ccstruct ccutil classify cube cutil dict image neural_networks/runtime textord viewer wordrec ccmain training tessdata testing java api
+AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\"
 
-EXTRA_DIST = eurotext.tif phototest.tif ReleaseNotes \
+EXTRA_DIST = config/config.rpath  eurotext.tif phototest.tif ReleaseNotes \
       acinclude.m4 config configure.ac runautoconf tesseract.spec
 
 #EXTRA_DIST = doc/html doc/@PACKAGE_NAME@_@PACKAGE_VERSION@.pdf doc/@PACKAGE_NAME@_@PACKAGE_VERSION@.ps.gz

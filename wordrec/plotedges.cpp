@@ -22,6 +22,11 @@
  ** limitations under the License.
  *
  *********************************************************************************/
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #ifdef __UNIX__
 #include <assert.h>
 #endif
@@ -71,7 +76,7 @@ void display_edgepts(LIST outlines) {
  **********************************************************************/
 void draw_blob_edges(TBLOB *blob) {
   TESSLINE *ol;
-  LIST edge_list = NIL;
+  LIST edge_list = NIL_LIST;
 
   if (wordrec_display_splits) {
     for (ol = blob->outlines; ol != NULL; ol = ol->next)

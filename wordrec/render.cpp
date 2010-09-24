@@ -22,6 +22,11 @@
  ** limitations under the License.
  *
  *********************************************************************************/
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "render.h"
 #include "blobs.h"
 
@@ -127,9 +132,6 @@ void render_outline(void *window,
     render_edgepts (window, outline->loop, color);
   /* Add on next outlines */
   render_outline (window, outline->next, color);
-
-  /* Add on child outlines */
-  render_outline(window, outline->child, Grey);
 }
 
 #endif  // GRAPHICS_DISABLED

@@ -16,9 +16,9 @@
  ** limitations under the License.
  ******************************************************************************/
 
-/**----------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
           Include Files and Type Defines
-----------------------------------------------------------------------------**/
+----------------------------------------------------------------------------*/
 #include "adaptive.h"
 #include "emalloc.h"
 #include "freelist.h"
@@ -30,25 +30,25 @@
 #endif
 #include <stdio.h>
 
-/**----------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
               Public Code
-----------------------------------------------------------------------------**/
+----------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+/**
+ * This routine adds a new adapted class to an existing
+ * set of adapted templates.
+ *
+ * @param Templates set of templates to add new class to
+ * @param Class new class to add to templates
+ * @param ClassId class id to associate with new class
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Thu Mar 14 13:06:09 1991, DSJ, Created.
+ */
 void AddAdaptedClass(ADAPT_TEMPLATES Templates,
                      ADAPT_CLASS Class,
                      CLASS_ID ClassId) {
-/*
- ** Parameters:
- **   Templates set of templates to add new class to
- **   Class   new class to add to templates
- **   ClassId   class id to associate with new class
- ** Globals: none
- ** Operation: This routine adds a new adapted class to an existing
- **   set of adapted templates.
- ** Return: none
- ** Exceptions: none
- ** History: Thu Mar 14 13:06:09 1991, DSJ, Created.
- */
   INT_CLASS IntClass;
 
   assert (Templates != NULL);
@@ -67,17 +67,17 @@ void AddAdaptedClass(ADAPT_TEMPLATES Templates,
 
 
 /*---------------------------------------------------------------------------*/
-void FreeTempConfig(TEMP_CONFIG Config) {
-/*
- ** Parameters:
- **   Config  config to be freed
- ** Globals: none
- ** Operation: This routine frees all memory consumed by a temporary
- **   configuration.
- ** Return: none
- ** Exceptions: none
- ** History: Thu Mar 14 13:34:23 1991, DSJ, Created.
+/**
+ * This routine frees all memory consumed by a temporary
+ * configuration.
+ *
+ * @param Config  config to be freed
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Thu Mar 14 13:34:23 1991, DSJ, Created.
  */
+void FreeTempConfig(TEMP_CONFIG Config) {
   assert (Config != NULL);
 
   destroy_nodes (Config->ContextsSeen, memfree);
@@ -96,22 +96,24 @@ void FreeTempProto(void *arg) {
 
 
 /*---------------------------------------------------------------------------*/
-ADAPT_CLASS NewAdaptedClass() {
-/*
- ** Parameters: none
- ** Globals: none
- ** Operation: This operation allocates and initializes a new adapted
- **   class data structure and returns a ptr to it.
- ** Return: Ptr to new class data structure.
- ** Exceptions: none
- ** History: Thu Mar 14 12:58:13 1991, DSJ, Created.
+/**
+ * This operation allocates and initializes a new adapted
+ * class data structure and returns a ptr to it.
+ *
+ * @return Ptr to new class data structure.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Thu Mar 14 12:58:13 1991, DSJ, Created.
  */
+ADAPT_CLASS NewAdaptedClass() {
   ADAPT_CLASS Class;
   int i;
 
   Class = (ADAPT_CLASS) Emalloc (sizeof (ADAPT_CLASS_STRUCT));
   Class->NumPermConfigs = 0;
-  Class->TempProtos = NIL;
+  Class->MaxNumTimesSeen = 0;
+  Class->TempProtos = NIL_LIST;
 
   Class->PermProtos = NewBitVector (MAX_NUM_PROTOS);
   Class->PermConfigs = NewBitVector (MAX_NUM_CONFIGS);
@@ -147,18 +149,18 @@ void free_adapted_class(ADAPT_CLASS adapt_class) {
 
 /*---------------------------------------------------------------------------*/
 namespace tesseract {
-ADAPT_TEMPLATES Classify::NewAdaptedTemplates(bool InitFromUnicharset) {
-/*
- ** Parameters:
- **   PopulateFromUnicharset      if true, add an empty class for
- **                                         each char in unicharset to the
- **                                         newly created templates
- ** Globals: none
- ** Operation: Allocates memory for adapted tempates.
- ** Return: Ptr to new adapted templates.
- ** Exceptions: none
- ** History: Fri Mar  8 10:15:28 1991, DSJ, Created.
+/**
+ * Allocates memory for adapted tempates.
+ * each char in unicharset to the newly created templates
+ *
+ * @param PopulateFromUnicharset if true, add an empty class for
+ * @return Ptr to new adapted templates.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Fri Mar  8 10:15:28 1991, DSJ, Created.
  */
+ADAPT_TEMPLATES Classify::NewAdaptedTemplates(bool InitFromUnicharset) {
   ADAPT_TEMPLATES Templates;
   int i;
 
@@ -195,17 +197,17 @@ void free_adapted_templates(ADAPT_TEMPLATES templates) {
 
 
 /*---------------------------------------------------------------------------*/
-TEMP_CONFIG NewTempConfig(int MaxProtoId) {
-/*
- ** Parameters:
- **   MaxProtoId  max id of any proto in new config
- ** Globals: none
- ** Operation: This routine allocates and returns a new temporary
- **   config.
- ** Return: Ptr to new temp config.
- ** Exceptions: none
- ** History: Thu Mar 14 13:28:21 1991, DSJ, Created.
+/**
+ * This routine allocates and returns a new temporary config.
+ *
+ * @param MaxProtoId  max id of any proto in new config
+ * @return Ptr to new temp config.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Thu Mar 14 13:28:21 1991, DSJ, Created.
  */
+TEMP_CONFIG NewTempConfig(int MaxProtoId) {
   TEMP_CONFIG Config;
   int NumProtos = MaxProtoId + 1;
 
@@ -217,7 +219,7 @@ TEMP_CONFIG NewTempConfig(int MaxProtoId) {
   Config->NumTimesSeen = 1;
   Config->MaxProtoId = MaxProtoId;
   Config->ProtoVectorSize = WordsInVectorOfSize (NumProtos);
-  Config->ContextsSeen = NIL;
+  Config->ContextsSeen = NIL_LIST;
   zero_all_bits (Config->Protos, Config->ProtoVectorSize);
 
   return (Config);
@@ -226,15 +228,16 @@ TEMP_CONFIG NewTempConfig(int MaxProtoId) {
 
 
 /*---------------------------------------------------------------------------*/
-TEMP_PROTO NewTempProto() {
-/*
- ** Parameters: none
- ** Globals: none
- ** Operation: This routine allocates and returns a new temporary proto.
- ** Return: Ptr to new temporary proto.
- ** Exceptions: none
- ** History: Thu Mar 14 13:31:31 1991, DSJ, Created.
+/**
+ * This routine allocates and returns a new temporary proto.
+ *
+ * @return Ptr to new temporary proto.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Thu Mar 14 13:31:31 1991, DSJ, Created.
  */
+TEMP_PROTO NewTempProto() {
   return ((TEMP_PROTO)
     alloc_struct (sizeof (TEMP_PROTO_STRUCT), "TEMP_PROTO_STRUCT"));
 }                                /* NewTempProto */
@@ -242,18 +245,18 @@ TEMP_PROTO NewTempProto() {
 
 /*---------------------------------------------------------------------------*/
 namespace tesseract {
-void Classify::PrintAdaptedTemplates(FILE *File, ADAPT_TEMPLATES Templates) {
-/*
- ** Parameters:
- **   File    open text file to print Templates to
- **   Templates adapted templates to print to File
- ** Globals: none
- ** Operation: This routine prints a summary of the adapted templates
- **   in Templates to File.
- ** Return: none
- ** Exceptions: none
- ** History: Wed Mar 20 13:35:29 1991, DSJ, Created.
+/**
+ * This routine prints a summary of the adapted templates
+ *  in Templates to File.
+ *
+ * @param File    open text file to print Templates to
+ * @param Templates adapted templates to print to File
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Wed Mar 20 13:35:29 1991, DSJ, Created.
  */
+void Classify::PrintAdaptedTemplates(FILE *File, ADAPT_TEMPLATES Templates) {
   int i;
   INT_CLASS IClass;
   ADAPT_CLASS AClass;
@@ -284,17 +287,18 @@ void Classify::PrintAdaptedTemplates(FILE *File, ADAPT_TEMPLATES Templates) {
 
 
 /*---------------------------------------------------------------------------*/
-ADAPT_CLASS ReadAdaptedClass(FILE *File) {
-/*
- ** Parameters:
- **   File  open file to read adapted class from
- ** Globals: none
- ** Operation: Read an adapted class description from File and return
- **   a ptr to the adapted class.
- ** Return: Ptr to new adapted class.
- ** Exceptions: none
- ** History: Tue Mar 19 14:11:01 1991, DSJ, Created.
+/**
+ * Read an adapted class description from File and return
+ * a ptr to the adapted class.
+ *
+ * @param File  open file to read adapted class from
+ * @return Ptr to new adapted class.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Tue Mar 19 14:11:01 1991, DSJ, Created.
  */
+ADAPT_CLASS ReadAdaptedClass(FILE *File) {
   int NumTempProtos;
   int NumConfigs;
   int i;
@@ -315,7 +319,7 @@ ADAPT_CLASS ReadAdaptedClass(FILE *File) {
 
   /* then read in the list of temporary protos */
   fread ((char *) &NumTempProtos, sizeof (int), 1, File);
-  Class->TempProtos = NIL;
+  Class->TempProtos = NIL_LIST;
   for (i = 0; i < NumTempProtos; i++) {
     TempProto =
       (TEMP_PROTO) alloc_struct (sizeof (TEMP_PROTO_STRUCT),
@@ -339,17 +343,18 @@ ADAPT_CLASS ReadAdaptedClass(FILE *File) {
 
 /*---------------------------------------------------------------------------*/
 namespace tesseract {
-ADAPT_TEMPLATES Classify::ReadAdaptedTemplates(FILE *File) {
-/*
- ** Parameters:
- **   File  open text file to read adapted templates from
- ** Globals: none
- ** Operation: Read a set of adapted templates from File and return
- **   a ptr to the templates.
- ** Return: Ptr to adapted templates read from File.
- ** Exceptions: none
- ** History: Mon Mar 18 15:18:10 1991, DSJ, Created.
+/**
+ * Read a set of adapted templates from File and return
+ * a ptr to the templates.
+ *
+ * @param File  open text file to read adapted templates from
+ * @return Ptr to adapted templates read from File.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Mon Mar 18 15:18:10 1991, DSJ, Created.
  */
+ADAPT_TEMPLATES Classify::ReadAdaptedTemplates(FILE *File) {
   int i;
   ADAPT_TEMPLATES Templates;
 
@@ -371,17 +376,18 @@ ADAPT_TEMPLATES Classify::ReadAdaptedTemplates(FILE *File) {
 
 
 /*---------------------------------------------------------------------------*/
-PERM_CONFIG ReadPermConfig(FILE *File) {
-/*
- ** Parameters:
- **   File  open file to read permanent config from
- ** Globals: none
- ** Operation: Read a permanent configuration description from File
- **   and return a ptr to it.
- ** Return: Ptr to new permanent configuration description.
- ** Exceptions: none
- ** History: Tue Mar 19 14:25:26 1991, DSJ, Created.
+/**
+ * Read a permanent configuration description from File
+ * and return a ptr to it.
+ *
+ * @param File  open file to read permanent config from
+ * @return Ptr to new permanent configuration description.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Tue Mar 19 14:25:26 1991, DSJ, Created.
  */
+PERM_CONFIG ReadPermConfig(FILE *File) {
   PERM_CONFIG Config;
   uinT8 NumAmbigs;
 
@@ -396,17 +402,18 @@ PERM_CONFIG ReadPermConfig(FILE *File) {
 
 
 /*---------------------------------------------------------------------------*/
-TEMP_CONFIG ReadTempConfig(FILE *File) {
-/*
- ** Parameters:
- **   File  open file to read temporary config from
- ** Globals: none
- ** Operation:  Read a temporary configuration description from File
- **   and return a ptr to it.
- ** Return: Ptr to new temporary configuration description.
- ** Exceptions: none
- ** History: Tue Mar 19 14:29:59 1991, DSJ, Created.
+/**
+ * Read a temporary configuration description from File
+ * and return a ptr to it.
+ *
+ * @param File  open file to read temporary config from
+ * @return Ptr to new temporary configuration description.
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Tue Mar 19 14:29:59 1991, DSJ, Created.
  */
+TEMP_CONFIG ReadTempConfig(FILE *File) {
   TEMP_CONFIG Config;
 
   Config =
@@ -424,19 +431,19 @@ TEMP_CONFIG ReadTempConfig(FILE *File) {
 
 
 /*---------------------------------------------------------------------------*/
-void WriteAdaptedClass(FILE *File, ADAPT_CLASS Class, int NumConfigs) {
-/*
- ** Parameters:
- **   File    open file to write Class to
- **   Class   adapted class to write to File
- **   NumConfigs  number of configs in Class
- ** Globals: none
- ** Operation: This routine writes a binary representation of Class
- **   to File.
- ** Return: none
- ** Exceptions: none
- ** History: Tue Mar 19 13:33:51 1991, DSJ, Created.
+/**
+ * This routine writes a binary representation of Class
+ * to File.
+ *
+ * @param File    open file to write Class to
+ * @param Class   adapted class to write to File
+ * @param NumConfigs  number of configs in Class
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Tue Mar 19 13:33:51 1991, DSJ, Created.
  */
+void WriteAdaptedClass(FILE *File, ADAPT_CLASS Class, int NumConfigs) {
   int NumTempProtos;
   LIST TempProtos;
   int i;
@@ -472,17 +479,17 @@ void WriteAdaptedClass(FILE *File, ADAPT_CLASS Class, int NumConfigs) {
 
 /*---------------------------------------------------------------------------*/
 namespace tesseract {
-void Classify::WriteAdaptedTemplates(FILE *File, ADAPT_TEMPLATES Templates) {
-/*
- ** Parameters:
- **   File    open text file to write Templates to
- **   Templates set of adapted templates to write to File
- ** Globals: none
- ** Operation: This routine saves Templates to File in a binary format.
- ** Return: none
- ** Exceptions: none
- ** History: Mon Mar 18 15:07:32 1991, DSJ, Created.
+/**
+ * This routine saves Templates to File in a binary format.
+ *
+ * @param File    open text file to write Templates to
+ * @param Templates set of adapted templates to write to File
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Mon Mar 18 15:07:32 1991, DSJ, Created.
  */
+void Classify::WriteAdaptedTemplates(FILE *File, ADAPT_TEMPLATES Templates) {
   int i;
 
   /* first write the high level adaptive template struct */
@@ -501,18 +508,18 @@ void Classify::WriteAdaptedTemplates(FILE *File, ADAPT_TEMPLATES Templates) {
 
 
 /*---------------------------------------------------------------------------*/
-void WritePermConfig(FILE *File, PERM_CONFIG Config) {
-/*
- ** Parameters:
- **   File  open file to write Config to
- **   Config  permanent config to write to File
- ** Globals: none
- ** Operation: This routine writes a binary representation of a
- **   permanent configuration to File.
- ** Return: none
- ** Exceptions: none
- ** History: Tue Mar 19 13:55:44 1991, DSJ, Created.
+/**
+ * This routine writes a binary representation of a
+ * permanent configuration to File.
+ * 
+ * @param File  open file to write Config to
+ * @param Config  permanent config to write to File
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Tue Mar 19 13:55:44 1991, DSJ, Created.
  */
+void WritePermConfig(FILE *File, PERM_CONFIG Config) {
   uinT8 NumAmbigs = 0;
 
   assert (Config != NULL);
@@ -526,18 +533,18 @@ void WritePermConfig(FILE *File, PERM_CONFIG Config) {
 
 
 /*---------------------------------------------------------------------------*/
-void WriteTempConfig(FILE *File, TEMP_CONFIG Config) {
-/*
- ** Parameters:
- **   File  open file to write Config to
- **   Config  temporary config to write to File
- ** Globals: none
- ** Operation: This routine writes a binary representation of a
- **   temporary configuration to File.
- ** Return: none
- ** Exceptions: none
- ** History: Tue Mar 19 14:00:28 1991, DSJ, Created.
+/**
+ * This routine writes a binary representation of a
+ * temporary configuration to File.
+ *
+ * @param File  open file to write Config to
+ * @param Config  temporary config to write to File
+ *
+ * @note Globals: none
+ * @note Exceptions: none
+ * @note History: Tue Mar 19 14:00:28 1991, DSJ, Created.
  */
+void WriteTempConfig(FILE *File, TEMP_CONFIG Config) {
   assert (Config != NULL);
                                  /* contexts not yet implemented */
   assert (Config->ContextsSeen == NULL);

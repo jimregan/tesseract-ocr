@@ -18,9 +18,9 @@
 #ifndef ADAPTIVE_H
 #define ADAPTIVE_H
 
-/**----------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
           Include Files and Type Defines
-----------------------------------------------------------------------------**/
+----------------------------------------------------------------------------*/
 #include "oldlist.h"
 #include "intproto.h"
 #include <stdio.h>
@@ -57,7 +57,8 @@ typedef union
 typedef struct
 {
   uinT8 NumPermConfigs;
-  uinT8 dummy[3];
+  uinT8 MaxNumTimesSeen;  // maximum number of times any TEMP_CONFIG was seen
+  uinT8 dummy[2];         // (cut at matcher_min_examples_for_prototyping)
   BIT_VECTOR PermProtos;
   BIT_VECTOR PermConfigs;
   LIST TempProtos;
@@ -75,13 +76,13 @@ typedef struct
 } ADAPT_TEMPLATES_STRUCT;
 typedef ADAPT_TEMPLATES_STRUCT *ADAPT_TEMPLATES;
 
-/**----------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
           Public Function Prototypes
-----------------------------------------------------------------------------**/
+----------------------------------------------------------------------------*/
 #define NumNonEmptyClassesIn(Template) ((Template)->NumNonEmptyClasses)
 
 #define IsEmptyAdaptedClass(Class) ((Class)->NumPermConfigs == 0 &&      \
-(Class)->TempProtos == NIL)
+(Class)->TempProtos == NIL_LIST)
 
 #define ConfigIsPermanent(Class,ConfigId)		\
 (test_bit ((Class)->PermConfigs, ConfigId))

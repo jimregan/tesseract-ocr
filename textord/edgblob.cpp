@@ -17,6 +17,11 @@
  *
  **********************************************************************/
 
+// Include automatically generated configuration file if running autoconf.
+#ifdef HAVE_CONFIG_H
+#include "config_auto.h"
+#endif
+
 #include "mfcpch.h"
 #include "scanedg.h"
 #include "drawedg.h"
@@ -55,11 +60,11 @@ EXTERN double_VAR(edges_childarea, 0.5,
 EXTERN double_VAR(edges_boxarea, 0.875,
                   "Min area fraction of grandchild for box");
 
-/**********************************************************************
- * OL_BUCKETS::OL_BUCKETS
+/**
+ * @name OL_BUCKETS::OL_BUCKETS
  *
  * Construct an array of buckets for associating outlines into blobs.
- **********************************************************************/
+ */
 
 OL_BUCKETS::OL_BUCKETS(
 //// constructor
@@ -73,12 +78,12 @@ ICOORD tright):         bl(bleft), tr(tright) {
 }
 
 
-/**********************************************************************
- * OL_BUCKETS::operator(
+/**
+ * @name OL_BUCKETS::operator(
  *
  * Return a pointer to a list of C_OUTLINEs corresponding to the
  * given pixel coordinates.
- **********************************************************************/
+ */
 
 C_OUTLINE_LIST *
 OL_BUCKETS::operator()(       // array access
@@ -88,8 +93,8 @@ inT16 y) {
 }
 
 
-/**********************************************************************
- * OL_BUCKETS::outline_complexity
+/**
+ * @name OL_BUCKETS::outline_complexity
  *
  * This is the new version of count_child.
  *
@@ -106,7 +111,7 @@ inT16 y) {
  * is too high, has too many children(likely a container), or has too
  * many layers of nested inner loops.  This has the side-effect of
  * flattening out boxed or reversed video text regions.
- **********************************************************************/
+ */
 
 inT32 OL_BUCKETS::outline_complexity(
                                      C_OUTLINE *outline,   // parent outline
@@ -171,11 +176,11 @@ inT32 OL_BUCKETS::outline_complexity(
 }
 
 
-/**********************************************************************
- * OL_BUCKETS::count_children
+/**
+ * @name OL_BUCKETS::count_children
  *
  * Find number of descendants of this outline.
- **********************************************************************/
+ */
 
 inT32 OL_BUCKETS::count_children(                     // recursive count
                                  C_OUTLINE *outline,  // parent outline
@@ -287,11 +292,11 @@ inT32 OL_BUCKETS::count_children(                     // recursive count
 
 
 
-/**********************************************************************
- * OL_BUCKETS::extract_children
+/**
+ * @name OL_BUCKETS::extract_children
  *
  * Find number of descendants of this outline.
- **********************************************************************/
+ */
 
 void OL_BUCKETS::extract_children(                     // recursive count
                                   C_OUTLINE *outline,  // parent outline
@@ -322,44 +327,35 @@ void OL_BUCKETS::extract_children(                     // recursive count
 }
 
 
-/**********************************************************************
- * extract_edges
+/**
+ * @name extract_edges
  *
  * Run the edge detector over the block and return a list of blobs.
- **********************************************************************/
+ */
 
-void extract_edges(                 // find blobs
-#ifndef GRAPHICS_DISABLED
-                   ScrollView* window,   // window for output
-#endif
-                   IMAGE *image,    // image to scan
-                   IMAGE *t_image,  // thresholded image
-                   ICOORD page_tr,  // corner of page
-                   BLOCK *block     // block to scan
-                  ) {
-  ICOORD bleft;                  // block box
-  ICOORD tright;
+void extract_edges(Pix* pix,  // thresholded image
+                   BLOCK *block) {  // block to scan
   C_OUTLINE_LIST outlines;       // outlines in block
-                                 // iterator
   C_OUTLINE_IT out_it = &outlines;
 
-#ifndef GRAPHICS_DISABLED
-  get_outlines(window, image, t_image, page_tr, (PDBLK *) block, &out_it);
-#else
-  get_outlines(image, t_image, page_tr, (PDBLK *) block, &out_it);
-#endif
-                                 // block box
+  // TODO(rays) move the pix all the way down to the bottom.
+  IMAGE image;
+  image.FromPix(pix);
+
+  block_edges(&image, block, &out_it);
+  ICOORD bleft;                  // block box
+  ICOORD tright;
   block->bounding_box(bleft, tright);
                                  // make blobs
   outlines_to_blobs(block, bleft, tright, &outlines);
 }
 
 
-/**********************************************************************
- * outlines_to_blobs
+/**
+ * @name outlines_to_blobs
  *
  * Gather together outlines into blobs using the usual bucket sort.
- **********************************************************************/
+ */
 
 void outlines_to_blobs(               // find blobs
                        BLOCK *block,  // block to scan
@@ -374,11 +370,11 @@ void outlines_to_blobs(               // find blobs
 }
 
 
-/**********************************************************************
- * fill_buckets
+/**
+ * @name fill_buckets
  *
  * Run the edge detector over the block and return a list of blobs.
- **********************************************************************/
+ */
 
 void fill_buckets(                           // find blobs
                   C_OUTLINE_LIST *outlines,  // outlines in block
@@ -399,11 +395,11 @@ void fill_buckets(                           // find blobs
 }
 
 
-/**********************************************************************
- * empty_buckets
+/**
+ * @name empty_buckets
  *
  * Run the edge detector over the block and return a list of blobs.
- **********************************************************************/
+ */
 
 void empty_buckets(                     // find blobs
                    BLOCK *block,        // block to scan
@@ -444,13 +440,13 @@ void empty_buckets(                     // find blobs
 }
 
 
-/**********************************************************************
- * capture_children
+/**
+ * @name capture_children
  *
  * Find all neighbouring outlines that are children of this outline
  * and either move them to the output list or declare this outline
  * illegal and return FALSE.
- **********************************************************************/
+ */
 
 BOOL8 capture_children(                       // find children
                        OL_BUCKETS *buckets,   // bucket sort clanss
