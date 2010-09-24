@@ -209,10 +209,7 @@ class BLOCK:public ELIST_LINK, public PDBLK
 
  private:
   BOOL8 proportional;          //< proportional
-<<<<<<< HEAD
-=======
   bool right_to_left_;         //< major script is right to left.
->>>>>>> 3.01-raw
   inT8 kerning;                //< inter blob gap
   inT16 spacing;               //< inter word gap
   inT16 pitch;                 //< pitch of non-props

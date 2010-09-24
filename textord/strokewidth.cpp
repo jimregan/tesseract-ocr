@@ -1131,13 +1131,9 @@ void StrokeWidth::MoveGoodLargeBlobs(int resolution, TO_BLOCK* block) {
   }
 }
 
-<<<<<<< HEAD
-/** Displays the blobs green or red according to whether they are good or not. */
-=======
 /** Displays the blobs colored according to the number of good neighbours
  * and the vertical/horizontal flow.
  */
->>>>>>> 3.01-raw
 ScrollView* StrokeWidth::DisplayGoodBlobs(const char* window_name,
                                           int x, int y) {
   ScrollView* window = NULL;
@@ -1179,29 +1175,6 @@ ScrollView* StrokeWidth::DisplayGoodBlobs(const char* window_name,
   return window;
 }
 
-<<<<<<< HEAD
-/** Handles a click event in a display window. */
-void StrokeWidth::HandleClick(int x, int y) {
-  BBGrid<BLOBNBOX, BLOBNBOX_CLIST, BLOBNBOX_C_IT>::HandleClick(x, y);
-  // Run a radial search for blobs that overlap.
-  GridSearch<BLOBNBOX, BLOBNBOX_CLIST, BLOBNBOX_C_IT> radsearch(this);
-  radsearch.StartRadSearch(x, y, 1);
-  BLOBNBOX* neighbour;
-  FCOORD click(x, y);
-  while ((neighbour = radsearch.NextRadSearch()) != NULL) {
-    TBOX nbox = neighbour->bounding_box();
-    if (nbox.contains(click) && neighbour->cblob() != NULL) {
-      SetBlobStrokeWidth(true, neighbour);
-      tprintf("Box (%d,%d)->(%d,%d): h-width=%.1f, v-width=%.1f p-width=%1.f\n",
-              nbox.left(), nbox.bottom(), nbox.right(), nbox.top(),
-              neighbour->horz_stroke_width(), neighbour->vert_stroke_width(),
-              2.0 * neighbour->cblob()->area()/neighbour->cblob()->perimeter());
-    }
-  }
-}
-
-=======
->>>>>>> 3.01-raw
 /**
  * Returns true if there is at least one side neighbour that has a similar
  * stroke width and is not on the other side of a rule line.
