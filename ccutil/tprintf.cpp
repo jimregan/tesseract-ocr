@@ -22,7 +22,7 @@
 #include          <stdio.h>
 #include          <stdarg.h>
 #include          "strngs.h"
-#include          "varable.h"
+#include          "params.h"
 #include              "debugwin.h"
 //#include                                      "ipeerr.h"
 #include          "tprintf.h"
@@ -36,6 +36,7 @@
 #define MAX_MSG_LEN     1024
 
 #define EXTERN
+// Since tprintf is protected by a mutex, these parameters can rmain global.
 DLLSYM STRING_VAR (debug_file, "", "File to send tprintf output to");
 DLLSYM BOOL_VAR (debug_window_on, FALSE,
 "Send tprintf to window unless file set");

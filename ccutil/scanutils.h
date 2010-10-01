@@ -34,8 +34,6 @@ int tess_fscanf(FILE* stream, const char *format, ...);
 
 #ifdef EMBEDDED
 
-#include <klibc/extern.h>
-
 // Attempts to parse the given file stream s as an integer of the base
 // 'base'. Returns the first successfully parsed integer as a uintmax_t, or
 // 0, if none was found.

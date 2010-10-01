@@ -31,11 +31,10 @@
 #include "freelist.h"
 #include "callcpp.h"
 #include "tprintf.h"
-#include "adaptmatch.h"
 #include "scanutils.h"
 #include "globals.h"
 #include "classify.h"
-#include "varable.h"
+#include "params.h"
 
 #include <stdio.h>
 #include <math.h>

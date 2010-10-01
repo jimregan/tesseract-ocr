@@ -5,13 +5,12 @@ AM_CPPFLAGS = -I$(top_srcdir)/cutil -I$(top_srcdir)/ccutil \
 EXTRA_DIST = dict.vcproj
 
 include_HEADERS = \
-    choicearr.h choices.h context.h conversion.h \
     dawg.h dict.h matchdefs.h \
-    permdawg.h permngram.h permute.h states.h stopper.h trie.h
+    permngram.h permute.h states.h stopper.h trie.h
 
 lib_LTLIBRARIES = libtesseract_dict.la
 libtesseract_dict_la_SOURCES = \
-    choices.cpp context.cpp conversion.cpp \
+    context.cpp \
     dawg.cpp dict.cpp hyphen.cpp \
     permdawg.cpp permngram.cpp permute.cpp states.cpp stopper.cpp trie.cpp
 
