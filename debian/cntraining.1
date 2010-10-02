@@ -1,0 +1,31 @@
+.TH CNTRAINING 1 "August 21, 2007"
+.SH NAME
+tesseract \- command line OCR tool
+.SH SYNOPSIS
+Part of the process to train tesseract for a new language. When the character features of all the training pages have been extracted, we need to cluster them to create the prototypes. The character shape features can be clustered using the mftraining and cntraining programs:
+.PP
+.B cntraining
+.RI "fontfile_1.tr fontfile_2.tr ..."
+.PP
+This will output the normproto data file (the character normalization sensitivity prototypes).
+.SH DESCRIPTION
+This manual page documents briefly the
+.B cntraining
+command.
+.PP
+\fBtesseract\fP is a commercial quality OCR engine originally developed at
+HP between 1985 and 1995. In 1995, this engine was among the top 3 evaluated
+by UNLV. It was open-sourced by HP and UNLV in 2005.
+.SH SEE ALSO
+.BR feh (1),
+.BR convert (1),
+.BR mftraining (1),
+.BR tesseract (1),
+.BR unicharset_extractor (1),
+.BR wordlist2dawg (1).
+.br
+.SH AUTHOR
+tesseract was written by Ray Smith.
+.PP
+This manual page was written by Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>,
+for the Debian project (but may be used by others).

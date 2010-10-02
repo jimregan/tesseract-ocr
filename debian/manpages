@@ -1,0 +1,6 @@
+debian/tesseract.1
+debian/mftraining.1
+debian/cntraining.1
+debian/unicharset_extractor.1
+debian/wordlist2dawg.1
+

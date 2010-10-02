@@ -1,0 +1,32 @@
+.TH WORDLIST2DAWG 1 "August 21, 2007"
+.SH NAME
+tesseract \- command line OCR tool
+.SH SYNOPSIS
+Part of the process to train tesseract for a new language. Tesseract uses 3 dictionary files for each language. Two of the files are coded as a Directed Acyclic Word Graph (DAWG), and the other is a plain UTF-8 text file. To make the DAWG dictionary files, you first need a wordlist for your language. The wordlist is formatted as a UTF-8 text file with one word per line. Split the wordlist into two sets: the frequent words, and the rest of the words, and then use wordlist2dawg to make the DAWG files:
+.PP
+.B wordlist2dawg
+.RI "frequent_words_list freq-dawg"
+.PP
+.B wordlist2dawg
+.RI "words_list word-dawg"
+.SH DESCRIPTION
+This manual page documents briefly the
+.B wordlist2dawg
+command.
+.PP
+\fBtesseract\fP is a commercial quality OCR engine originally developed at
+HP between 1985 and 1995. In 1995, this engine was among the top 3 evaluated
+by UNLV. It was open-sourced by HP and UNLV in 2005.
+.SH SEE ALSO
+.BR feh (1),
+.BR convert (1),
+.BR mftraining (1),
+.BR cntraining (1),
+.BR unicharset_extractor (1),
+.BR tesseract (1).
+.br
+.SH AUTHOR
+tesseract was written by Ray Smith.
+.PP
+This manual page was written by Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>,
+for the Debian project (but may be used by others).

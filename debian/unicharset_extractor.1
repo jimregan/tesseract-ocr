@@ -1,0 +1,32 @@
+.TH UNICHARSET_EXTRACTOR 1 "August 21, 2007"
+.SH NAME
+tesseract \- command line OCR tool
+.SH SYNOPSIS
+Part of the process to train tesseract for a new language. Tesseract needs to know the set of possible characters it can output. To generate the unicharset data file, use the unicharset_extractor program on the training pages bounding box files:
+.PP
+.B unicharset_extractor
+.RI "fontfile_1.box fontfile_2.box ..."
+.SH DESCRIPTION
+This manual page documents briefly the
+.B unicharset_extractor
+command.
+.PP
+\fBtesseract\fP is a commercial quality OCR engine originally developed at
+HP between 1985 and 1995. In 1995, this engine was among the top 3 evaluated
+by UNLV. It was open-sourced by HP and UNLV in 2005.
+.PP
+Tesseract needs to have access to character properties isalpha, isdigit, isupper, islower. This data must be encoded in the unicharset data file. Each line of this file corresponds to one character. The character in UTF-8 is followed by a hexadecimal number representing a binary mask that encodes the properties. Each bit corresponds to a property. If the bit is set to 1, it means that the property is true. The bit ordering is (from least significant bit to most significant bit): isalpha, islower, isupper, isdigit.
+.PP
+.SH SEE ALSO
+.BR feh (1),
+.BR convert (1),
+.BR mftraining (1),
+.BR cntraining (1),
+.BR tesseract (1),
+.BR wordlist2dawg (1).
+.br
+.SH AUTHOR
+tesseract was written by Ray Smith.
+.PP
+This manual page was written by Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>,
+for the Debian project (but may be used by others).

@@ -1,0 +1,68 @@
+tesseract (2.03-2) unstable; urgency=low
+
+  * Patch ccmain/baseapi.cpp to allow use with ocropus (Closes: #483896)
+
+ -- Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>  Thu, 12 Jun 2008 23:17:00 +0200
+
+tesseract (2.03-1) unstable; urgency=low
+
+  * Initial release of 2.03 (Closes: #478556)
+  * Switch to quilt for managing patches
+  * Patch java/makefile to fix install and distclean targets
+  * Patch ccutil/Makefile.* to fix redefine warnings (Closes: #455397)
+  * Patch viewer/scrollview.cpp, viewer/svmnode.cpp & viewer/svutil.cpp
+    to fix FTBFS with gcc 4.3
+  * Corrected debian/copyright (thanks Winnie)
+
+ -- Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>  Tue, 22 Apr 2008 20:35:09 +0200
+
+tesseract (2.01-4) unstable; urgency=low
+
+  * + libtiff dependency (Closes: #459811)
+  * Updated description (Closes: #418991)
+  * Bumped standards
+  * + Uploaders: Gürkan Sengün
+  * + XS-DM-Upload-Allowed: yes
+
+ -- Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>  Tue, 08 Jan 2008 22:10:17 +0100
+
+tesseract (2.01-3) unstable; urgency=low
+
+  * - Recommends: (Closes: #451865)
+
+ -- Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>  Tue, 20 Nov 2007 21:14:26 +0100
+
+tesseract (2.01-2) unstable; urgency=low
+
+  * + Replaces: tesseract-ocr-data (Closes: #451042)
+
+ -- Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>  Thu, 15 Nov 2007 20:16:59 +0100
+
+tesseract (2.01-1) unstable; urgency=low
+
+  * Initial release of 2.01 (Closes: #434152)
+  * Applied tesseract-2.01.patch1.tar.gz
+  * Changed packaging licence to GPLv3
+
+ -- Jeffrey Ratcliffe <Jeffrey.Ratcliffe@gmail.com>  Sat, 20 Oct 2007 09:07:28 +0200
+
+tesseract (1.02-3) unstable; urgency=medium
+
+  * Applied patch of Bryan Stillwell <bryan@bokeoa.com> to fix
+    FTBFS on 64 bit arches. (Closes: #398379)
+
+ -- Gürkan Sengün <gurkan@linuks.mine.nu>  Mon, 11 Dec 2006 11:23:00 +0100
+
+tesseract (1.02-2) unstable; urgency=low
+
+  * Applied patch to fix tessdata directory access. (Closes: #400183)
+  * Split the data to a data package.
+
+ -- Gürkan Sengün <gurkan@linuks.mine.nu>  Mon, 27 Nov 2006 11:11:31 +0100
+
+tesseract (1.02-1) unstable; urgency=low
+
+  * Initial release. (Closes: #390204)
+
+ -- Gürkan Sengün <gurkan@linuks.mine.nu>  Mon,  9 Oct 2006 17:15:29 +0200
+

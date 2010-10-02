@@ -1,0 +1,22 @@
+Index: tesseract-2.03/ccutil/Makefile.am
+===================================================================
+--- tesseract-2.03.orig/ccutil/Makefile.am	2008-04-25 22:40:29.000000000 +0200
++++ tesseract-2.03/ccutil/Makefile.am	2008-04-25 22:40:37.000000000 +0200
+@@ -1,5 +1,4 @@
+ SUBDIRS =
+-AM_CXXFLAGS = -DTESSDATA_PREFIX=@datadir@/
+ 
+ include_HEADERS = \
+     basedir.h bits16.h clst.h debugwin.h elst2.h elst.h errcode.h \
+Index: tesseract-2.03/ccutil/Makefile.in
+===================================================================
+--- tesseract-2.03.orig/ccutil/Makefile.in	2008-04-25 22:40:49.000000000 +0200
++++ tesseract-2.03/ccutil/Makefile.in	2008-04-25 22:41:10.000000000 +0200
+@@ -75,7 +75,6 @@
+ VERSION = @VERSION@
+ 
+ SUBDIRS = 
+-AM_CXXFLAGS = -DTESSDATA_PREFIX=@datadir@/
+ 
+ include_HEADERS =      basedir.h bits16.h clst.h debugwin.h elst2.h elst.h errcode.h     fileerr.h tessopt.h globaloc.h hashfn.h host.h hosthplb.h lsterr.h     mainblk.h memblk.h memryerr.h memry.h mfcpch.h ndminx.h notdll.h     nwmain.h ocrclass.h ocrshell.h platform.h secname.h serialis.h     stderr.h strngs.h tessclas.h tprintf.h varable.h     mfcpch.cpp scanutils.cpp scanutils.h unichar.h     unicharmap.h unicharset.h boxread.h
+ 
