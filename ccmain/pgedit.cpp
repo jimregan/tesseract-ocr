@@ -280,7 +280,7 @@ void Tesseract::do_re_display(
 
   image_win->Clear();
   if (display_image != 0) {
-    image_win->Image(pix_binary_, 0, 0);
+    image_win->Image(pix_binary(), 0, 0);
   }
 
   for (WERD_RES* word = pr_it.word(); word != NULL; word = pr_it.forward()) {
