@@ -1,6 +1,8 @@
-debian/tesseract.1
-debian/mftraining.1
-debian/cntraining.1
-debian/unicharset_extractor.1
-debian/wordlist2dawg.1
-
+doc/cntraining.1
+doc/combine_tessdata.1
+doc/mftraining.1
+doc/tesseract.1
+doc/unicharambigs.5
+doc/unicharset.5
+doc/unicharset_extractor.1
+doc/wordlist2dawg.1
